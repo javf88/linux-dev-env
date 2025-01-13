@@ -7,6 +7,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
+# swift
+*resolved
+
 # bootloader
 /ext
 *.iso
