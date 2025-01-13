@@ -13,6 +13,7 @@ DerivedData/
 # bootloader
 /ext
 *.iso
+*.dmg
 
 # vim
 *.swp
