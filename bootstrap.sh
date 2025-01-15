@@ -1,40 +1,73 @@
 #!/bin/bash
-echo "# Downloading resources"
-ISO=ubuntu-24.10-live-server-arm64.iso
 
-if [ -f "./$ISO" ]; then
-    echo "$ISO exists already."
-else
-    echo -e "\nFetching $ISO"
-    curl -O https://cdimage.ubuntu.com/releases/24.10/release/$ISO
-fi
+ISO=ubuntu-24.04.1-live-server-arm64.iso
 
-echo -e "Mounting $ISO in ubuntu"
-mkdir ubuntu
-result=$(hdiutil attach -nomount $ISO)
-DISK=$(echo $result | sed "s/ .*//")
-mount -t cd9660 $DISK ubuntu
+download()
+{
+    if [ ! -f "./$ISO" ]; then
+        echo -e "\nFetching $ISO"
+        curl -O https://cdimage.ubuntu.com/releases/24.04.1/release/$ISO
+    else
+        echo "$ISO exists already."
+    fi
 
-if [ -d ext ]; then
-    echo "bootloader extracted already."
-else
-    echo "Extracting kernel and initrd into ext"
+    return 0
+}
+
+mount_disk()
+{
+    echo -e "Mounting $ISO in ubuntu"
+    mkdir ubuntu
+    hdiutil attach -nomount $ISO
+    DISK=$(hdiutil info | grep "/dev/disk" | sed "s/s.\t.*//" | tail -n 1)
+    mount -t cd9660 $DISK ubuntu
+
+    return 0
+}
+
+extract()
+{
+    echo "Extracting kernel and initrd"
     cp ubuntu/casper/vmlinuz vmlinux.gz
     gzip -d vmlinux.gz
+    cp ubuntu/casper/initrd .
 
+    return 0
+}
+
+create()
+{
+    if [ ! -f BlockDevice.dmg ]; then
+        echo "Creating disk image"
+        hdiutil create -size 30g -type UDIF BlockDevice.dmg
+    else
+        echo "BlockDevide.dmg exists already."
+    fi
+
+    return 0
+}
+
+unmount()
+{
+    echo "Unmounting and cleaning the workspace"
+    umount ubuntu
+    DISK=$(hdiutil info | grep "/dev/disk" | sed "s/s.\t.*//" | tail -n 1)
+    hdiutil detach $DISK
+    rm -rf ubuntu
+
+    return 0
+}
+
+if [ ! -d ext ]; then
     mkdir ext
-    mv vmlinux ext
-    cp ubuntu/casper/initrd ext
-fi
+    cd ext
 
-if [ -d "ext/BlockDevice.dmg" ]; then
-    echo "BlockDevide.dmg exists already."
+    echo "# Downloading resources"
+    download
+    mount_disk
+    extract
+    create
+    unmount
 else
-    echo "Creating disk image"
-    hdiutil create -size 30g -type UDIF ext/BlockDevice.dmg
+    echo "Repository has already been  initialized"
 fi
-
-echo "Unmounting and cleaning the workspace"
-umount ubuntu
-hdiutil detach $DISK
-rm -rf ubuntu

@@ -13,4 +13,4 @@ sign:	build
 	codesign --force --sign - --entitlements Sources/vml.entitlements .build/arm64-apple-macosx/debug/vml
 
 runVML: sign
-	.build/arm64-apple-macosx/debug/vml ext/vmlinux ext/initrd ubuntu-24.10-live-server-arm64.iso ext/BlockDevice.dmg
+	.build/arm64-apple-macosx/debug/vml ext/vmlinux ext/initrd ext/ubuntu-24.04.1-live-server-arm64.iso ext/BlockDevice.dmg
